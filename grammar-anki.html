@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语语法记忆系统 - Anki风格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* 主菜单样式 */
+        .menu-btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-learn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-review {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn-browse {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            color: white;
+        }
+
+        .btn-stats {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+            color: white;
+        }
+
+        .btn-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        /* 课程列表样式 */
+        .lesson-list {
+            margin-top: 10px;
+        }
+
+        .lesson-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lesson-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .lesson-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .lesson-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .lesson-progress {
+            text-align: right;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 60px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* 语法列表样式 */
+        .grammar-list {
+            margin-top: 10px;
+        }
+
+        .grammar-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .grammar-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .grammar-pattern {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+        }
+
+        .grammar-meaning {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .grammar-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status-new {
+            background: #6c757d;
+        }
+
+        .status-learning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .status-review {
+            background: #28a745;
+        }
+
+        .status-mastered {
+            background: #6f42c1;
+        }
+
+        .next-review {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 学习卡片样式 */
+        .study-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .study-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-front .pattern {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+        }
+
+        .card-back .meaning {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .card-back .connection {
+            font-size: 16px;
+            color: #555;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            white-space: pre-line;
+            text-align: left;
+        }
+
+        .card-back .notes {
+            font-size: 14px;
+            color: #666;
+            background: #fff3cd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .examples {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .example-item:hover {
+            background: #e9ecef;
+        }
+
+        .example-japanese {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 8px;
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            line-height: 2.2;
+            position: relative;
+        }
+
+        .example-chinese {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* 假名标注样式 */
+        .furigana-text {
+            position: relative;
+            display: inline-block;
+        }
+
+        .furigana {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #666;
+            white-space: nowrap;
+            font-weight: normal;
+        }
+
+        /* 语法高亮样式 */
+        .grammar-highlight {
+            color: #007bff;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .flip-hint {
+            font-size: 14px;
+            color: #999;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        /* 按钮样式 */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-again {
+            background: #dc3545;
+        }
+
+        .btn-hard {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-good {
+            background: #28a745;
+        }
+
+        .btn-easy {
+            background: #17a2b8;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .session-progress {
+            background: #e9ecef;
+            height: 4px;
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .session-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* 上传界面样式 */
+        .upload-container {
+            max-width: 100%;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #4facfe;
+            background: #e3f2fd;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .format-guide {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .format-guide h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .format-example {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .format-example pre {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #333;
+        }
+
+        .format-notes {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .format-notes ul {
+            margin: 10px 0 0 20px;
+        }
+
+        .format-notes li {
+            margin: 5px 0;
+            color: #856404;
+        }
+
+        .upload-result {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .upload-result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .parse-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .parsed-lesson {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .parsed-lesson h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .parsed-grammar {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #4facfe;
+        }
+
+        .parsed-pattern {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .parsed-meaning {
+            color: #666;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        .parsed-examples {
+            font-size: 12px;
+            color: #777;
+            margin-top: 8px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        /* 个人笔记样式 */
+        .personal-notes-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .notes-title {
+            font-weight: bold;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .notes-toggle-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .notes-toggle-btn:hover {
+            background: #0056b3;
+        }
+
+        .personal-notes-display {
+            min-height: 40px;
+        }
+
+        .notes-content {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 8px 0;
+        }
+
+        .notes-content.has-content {
+            color: #495057;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            white-space: pre-wrap;
+        }
+
+        .personal-notes-edit {
+            margin-top: 10px;
+        }
+
+        .personal-notes-edit textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .personal-notes-edit textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .notes-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+
+        .notes-save-btn,
+        .notes-cancel-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notes-save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .notes-save-btn:hover {
+            background: #218838;
+        }
+
+        .notes-cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .notes-cancel-btn:hover {
+            background: #545b62;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>日语语法记忆系统</h1>
+            <div class="stats">
+                <span>今日新学: <span id="today-new">0</span></span>
+                <span>今日复习: <span id="today-review">0</span></span>
+                <span>待复习: <span id="due-count">0</span></span>
+            </div>
+        </div>
+
+        <!-- 主菜单 -->
+        <div id="main-menu" class="screen active">
+            <button class="menu-btn btn-learn" onclick="showLessonList('learn')">
+                <span>📚 学习新语法</span>
+                <span class="btn-count" id="new-count">5</span>
+            </button>
+
+            <button class="menu-btn btn-review" onclick="startReview()">
+                <span>🔄 复习语法</span>
+                <span class="btn-count" id="review-count">0</span>
+            </button>
+
+            <button class="menu-btn btn-browse" onclick="showLessonList('browse')">
+                <span>📖 浏览语法</span>
+                <span class="btn-count">∞</span>
+            </button>
+
+            <button class="menu-btn btn-stats" onclick="showStats()">
+                <span>📊 学习统计</span>
+                <span class="btn-count">📈</span>
+            </button>
+
+            <button class="menu-btn btn-upload" onclick="showUpload()">
+                <span>📤 上传语法</span>
+                <span class="btn-count">+</span>
+            </button>
+        </div>
+
+        <!-- 课程列表 -->
+        <div id="lesson-list" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2 id="lesson-list-title">选择课程</h2>
+            <div class="lesson-list" id="lessons-container">
+                <!-- 课程列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 语法列表 -->
+        <div id="grammar-list" class="screen">
+            <button class="back-btn" onclick="backToLessonList()">← 返回课程列表</button>
+            <h2 id="grammar-list-title">第一课语法</h2>
+            <div class="grammar-list" id="grammar-container">
+                <!-- 语法列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 学习界面 -->
+        <div id="study-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+
+            <div class="progress-info">
+                <div id="study-progress-text">第 1 张 / 共 5 张</div>
+                <div class="session-progress">
+                    <div class="session-progress-fill" id="study-progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="study-card" onclick="flipCard()">
+                <div id="card-front" class="card-front">
+                    <div class="pattern" id="study-pattern">～際（に）</div>
+                    <div class="flip-hint">点击翻转查看详情</div>
+                </div>
+
+                <div id="card-back" class="card-back hidden">
+                    <div class="meaning" id="study-meaning">在～时候、在～时机</div>
+                    <div class="connection" id="study-connection">动词辞书形/た形 + 際（に）</div>
+                    <div class="notes" id="study-notes">硬い言い方，正式场合使用</div>
+                    <div class="examples" id="study-examples">
+                        <!-- 例句将在这里动态显示 -->
+                    </div>
+
+                    <!-- 个人笔记区域 -->
+                    <div class="personal-notes-section">
+                        <div class="notes-header">
+                            <span class="notes-title">📝 我的笔记</span>
+                            <button class="notes-toggle-btn" onclick="toggleNotesEdit()" id="notes-toggle">编辑</button>
+                        </div>
+                        <div class="personal-notes-display" id="personal-notes-display">
+                            <div class="notes-content" id="notes-content">暂无笔记，点击编辑添加...</div>
+                        </div>
+                        <div class="personal-notes-edit hidden" id="personal-notes-edit">
+                            <textarea id="notes-textarea" placeholder="在这里记录你的学习笔记、记忆技巧、易错点等..." rows="4"></textarea>
+                            <div class="notes-actions">
+                                <button class="notes-save-btn" onclick="savePersonalNote()">💾 保存</button>
+                                <button class="notes-cancel-btn" onclick="cancelNotesEdit()">❌ 取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons hidden" id="study-buttons">
+                <button class="action-btn btn-again" onclick="answerCard(1)">重来<br><small>1分钟</small></button>
+                <button class="action-btn btn-hard" onclick="answerCard(2)">困难<br><small>6分钟</small></button>
+                <button class="action-btn btn-good" onclick="answerCard(3)">良好<br><small>1天</small></button>
+                <button class="action-btn btn-easy" onclick="answerCard(4)">简单<br><small>4天</small></button>
+            </div>
+        </div>
+
+        <!-- 统计界面 -->
+        <div id="stats-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2>学习统计</h2>
+            <div id="stats-content">
+                <!-- 统计内容将在这里显示 -->
+            </div>
+
+            <div class="reset-section">
+                <h3>⚠️ 危险操作</h3>
+                <button class="reset-btn" onclick="resetAllData()">🗑️ 重置所有数据</button>
+                <p class="reset-warning">此操作将清空所有学习进度和上传的语法内容，无法恢复！</p>
+            </div>
+        </div>
+
+        <!-- 上传界面 -->
+        <div id="upload-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2>上传自定义语法</h2>
+
+            <div class="upload-container">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">
+                        <p>点击选择文件或拖拽文件到此处</p>
+                        <p class="upload-hint">支持 .txt 格式文件</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".txt" style="display: none;">
+                </div>
+
+                <div class="format-guide">
+                    <h3>📋 文件格式说明</h3>
+                    <div class="format-example">
+                        <p><strong>支持多课时格式：</strong></p>
+                        <pre>第2课
+忘れないうちに、カレンダーにメモしておこう。
+趁着没忘，先记在日历上吧。
+「〜うちに」：A:"趁着～赶紧"+意志；B:后+不知不觉、自然而然的变化；不+意志
+浜辺でバーベキューをやっている最中に、急に雨が降り出した。
+正在海边烧烤的时候，突然下起雨来。
+「〜最中(に)／〜最中だ」："正在～"，后+妨碍的事情
+
+第3课
+彼女は毎日遅刻ばかりしている。
+她每天都在迟到。
+「〜ばかりだ」：表示不断重复某种不好的行为
+最近忙しくて、疲れる一方だ。
+最近很忙，越来越累。
+「〜一方だ」：表示朝着某个方向不断发展</pre>
+                    </div>
+                    <div class="format-notes">
+                        <p><strong>格式说明：</strong></p>
+                        <ul>
+                            <li>✅ <strong>支持多课时</strong>：一个文档可以包含多个课程</li>
+                            <li>📚 课程标题：第X课（如：第2课、第3课、第10课）</li>
+                            <li>📝 每3行为一组：日语例句 → 中文翻译 → 语法解释</li>
+                            <li>🔤 语法解释格式：「语法点」：说明内容</li>
+                            <li>🔄 课程之间可用空行分隔（可选）</li>
+                            <li>💾 文件编码请使用 UTF-8</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="upload-result" id="upload-result" style="display: none;">
+                    <h3>📊 解析结果</h3>
+                    <div id="parse-result"></div>
+                    <div class="upload-actions">
+                        <button class="action-btn btn-confirm" onclick="confirmUpload()">确认添加</button>
+                        <button class="action-btn btn-cancel" onclick="cancelUpload()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 课程数据结构
+        const lessonsData = {
+            1: {
+                title: "第01课：～とき・～直後に",
+                subtitle: "（在～时候・刚～之后）",
+                grammar: []
+            },
+            2: {
+                title: "第02课：～している（進行中）",
+                subtitle: "（正在进行中）",
+                grammar: []
+            },
+            3: {
+                title: "第03课：～後で",
+                subtitle: "（在～之后）",
+                grammar: []
+            },
+            4: {
+                title: "第04课：範囲の始まりと終わり・その間",
+                subtitle: "（范围的开始与结束・其间）",
+                grammar: []
+            },
+            5: {
+                title: "第05课：～だけ",
+                subtitle: "（限定、尽可能）",
+                grammar: []
+            },
+            6: {
+                title: "第06课：～だけではなく・それに加えて",
+                subtitle: "（不仅～而且、再加上）",
+                grammar: []
+            },
+            7: {
+                title: "第07课：～について・～を相手にして",
+                subtitle: "（关于～・以～为对象）",
+                grammar: []
+            },
+            8: {
+                title: "第08课：～を基準にして",
+                subtitle: "（以～为基准）",
+                grammar: []
+            },
+            9: {
+                title: "第09课：～に関連して・～に対応して",
+                subtitle: "（与～相关・与～相对应）",
+                grammar: []
+            },
+            10: {
+                title: "第10课：～や～など",
+                subtitle: "（～或～之类）",
+                grammar: []
+            },
+            11: {
+                title: "第11课：～に関係なく・無視して",
+                subtitle: "（与～无关・无视～）",
+                grammar: []
+            },
+            12: {
+                title: "第12课：強く否定する・強く否定しない",
+                subtitle: "（强烈否定・并非完全否定）",
+                grammar: []
+            },
+            13: {
+                title: "第13课：～（話題）は",
+                subtitle: "（关于话题～）",
+                grammar: []
+            },
+            14: {
+                title: "第14课：～けれど",
+                subtitle: "（虽然～但是）",
+                grammar: []
+            },
+            15: {
+                title: "第15课：もしそうなら・たとえそうでも",
+                subtitle: "（如果是那样・即使是那样）",
+                grammar: []
+            },
+            16: {
+                title: "第16课：～だから（理由）-1",
+                subtitle: "（因为～（理由）-1）",
+                grammar: []
+            },
+            17: {
+                title: "第17课：～だから（理由）-2",
+                subtitle: "（因为～（理由）-2）",
+                grammar: []
+            },
+            18: {
+                title: "第18课：～できない・困難だ・～できる",
+                subtitle: "（不能・困难・能）",
+                grammar: []
+            },
+            19: {
+                title: "第19课：～を見て評価すると・～の立場で...",
+                subtitle: "（通过看～来评价・站在～的立场...）",
+                grammar: []
+            },
+            20: {
+                title: "第20课：結果はどうなったか",
+                subtitle: "（结果是怎么样的）",
+                grammar: []
+            },
+            21: {
+                title: "第21课：強く言う・軽く言う",
+                subtitle: "（强硬地说・委婉地说）",
+                grammar: []
+            },
+            22: {
+                title: "第22课：～だろうと思う",
+                subtitle: "（我想大概是～吧）",
+                grammar: []
+            },
+            23: {
+                title: "第23课：感想を言う・主張する",
+                subtitle: "（发表感想・主张）",
+                grammar: []
+            },
+            24: {
+                title: "第24课：提案する・意志を表す",
+                subtitle: "（提案・表达意志）",
+                grammar: []
+            },
+            25: {
+                title: "第25课：強くそう感じる・思いが強いられる",
+                subtitle: "（感触强烈・被迫）",
+                grammar: []
+            },
+            26: {
+                title: "第26课：願う・感動する",
+                subtitle: "（祈愿・感动）",
+                grammar: []
+            }
+        };
+
+        // 应用状态
+        let currentMode = 'menu'; // menu, lesson-list, grammar-list, study, stats
+        let currentLesson = null;
+        let currentStudyCards = [];
+        let currentCardIndex = 0;
+        let isCardFlipped = false;
+        let studyMode = 'learn'; // learn, review, browse
+
+        // 本地存储管理
+        class StorageManager {
+            static getCardProgress(cardId) {
+                const progress = localStorage.getItem('cardProgress');
+                const data = progress ? JSON.parse(progress) : {};
+                return data[cardId] || {
+                    id: cardId,
+                    status: 'new', // new, learning, review, mastered
+                    interval: 0,
+                    easeFactor: 2.5,
+                    reviewCount: 0,
+                    lastReviewed: null,
+                    nextReview: null
+                };
+            }
+
+            static saveCardProgress(cardId, progress) {
+                const allProgress = localStorage.getItem('cardProgress');
+                const data = allProgress ? JSON.parse(allProgress) : {};
+                data[cardId] = progress;
+                localStorage.setItem('cardProgress', JSON.stringify(data));
+            }
+
+            static getTodayStats() {
+                const today = new Date().toDateString();
+                const stats = localStorage.getItem('todayStats');
+                const data = stats ? JSON.parse(stats) : {};
+
+                if (data.date !== today) {
+                    return { date: today, newCards: 0, reviewCards: 0 };
+                }
+                return data;
+            }
+
+            static updateTodayStats(type) {
+                const today = new Date().toDateString();
+                let stats = this.getTodayStats();
+
+                if (type === 'new') {
+                    stats.newCards = (stats.newCards || 0) + 1;
+                } else if (type === 'review') {
+                    stats.reviewCards = (stats.reviewCards || 0) + 1;
+                }
+
+                stats.date = today;
+                localStorage.setItem('todayStats', JSON.stringify(stats));
+            }
+        }
+
+        // 间隔重复算法 - 严格按照Anki逻辑
+        class SpacedRepetition {
+            static calculateNextReview(progress, quality) {
+                // quality: 1=again, 2=hard, 3=good, 4=easy
+                const now = Date.now();
+                let interval = progress.interval || 0;
+                let easeFactor = progress.easeFactor || 2.5;
+                let graduated = false; // 是否从学习阶段毕业
+
+                if (progress.status === 'new' || progress.status === 'learning') {
+                    // 学习阶段
+                    if (quality < 3) {
+                        // 回答错误，重新开始学习步骤
+                        progress.learningStep = 0;
+                        interval = quality === 1 ? 1 : 6; // 1分钟或6分钟
+                        progress.status = 'learning';
+                    } else {
+                        // 回答正确，进入下一个学习步骤
+                        const learningSteps = [1, 10]; // 1分钟，10分钟
+                        progress.learningStep = (progress.learningStep || 0) + 1;
+
+                        if (progress.learningStep >= learningSteps.length) {
+                            // 完成学习阶段，毕业到复习
+                            interval = quality === 3 ? 1 : 4; // 1天或4天
+                            progress.status = 'review';
+                            graduated = true;
+                        } else {
+                            // 还在学习阶段
+                            interval = learningSteps[progress.learningStep];
+                            progress.status = 'learning';
+                        }
+                    }
+                } else {
+                    // 复习阶段
+                    if (quality < 3) {
+                        // 回答错误，回到学习阶段
+                        progress.learningStep = 0;
+                        interval = 1; // 1分钟
+                        progress.status = 'learning';
+                        // 降低难度因子
+                        easeFactor = Math.max(1.3, easeFactor - 0.2);
+                    } else {
+                        // 回答正确，计算新的复习间隔
+                        if (interval === 0) interval = 1;
+
+                        // 调整难度因子
+                        easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+                        easeFactor = Math.max(1.3, easeFactor);
+
+                        // 计算新间隔
+                        interval = Math.round(interval * easeFactor);
+
+                        // 根据间隔长度确定状态
+                        if (interval >= 21) {
+                            progress.status = 'review';
+                        }
+                        if (interval >= 180) {
+                            progress.status = 'mastered';
+                        }
+                        graduated = true;
+                    }
+                }
+
+                progress.interval = interval;
+                progress.easeFactor = easeFactor;
+                progress.reviewCount++;
+                progress.lastReviewed = now;
+
+                // 计算下次复习时间
+                const nextReview = now + (interval * (interval < 60 ? 60000 : 86400000)); // 分钟或天
+                progress.nextReview = nextReview;
+
+                return { progress, graduated };
+            }
+
+            static getDueCards() {
+                const now = Date.now();
+                const dueCards = [];
+
+                // 遍历所有课程的所有语法
+                Object.values(lessonsData).forEach(lesson => {
+                    lesson.grammar.forEach(grammar => {
+                        const progress = StorageManager.getCardProgress(grammar.id);
+                        if (progress.nextReview && progress.nextReview <= now) {
+                            dueCards.push({ ...grammar, progress });
+                        }
+                    });
+                });
+
+                return dueCards;
+            }
+
+            static getNewCards(limit = 20) {
+                const newCards = [];
+
+                // 遍历所有课程的所有语法
+                Object.values(lessonsData).forEach(lesson => {
+                    lesson.grammar.forEach(grammar => {
+                        const progress = StorageManager.getCardProgress(grammar.id);
+                        if (progress.status === 'new' && newCards.length < limit) {
+                            newCards.push({ ...grammar, progress });
+                        }
+                    });
+                });
+
+                return newCards;
+            }
+        }
+
+        // 初始化应用
+        function initApp() {
+            // 检查是否是首次使用，只有首次使用才重置数据
+            const isFirstTime = !localStorage.getItem('appInitialized');
+
+            if (isFirstTime) {
+                console.log('🔄 首次使用，初始化系统...');
+                localStorage.clear();
+                localStorage.setItem('appInitialized', 'true');
+                console.log('✅ 系统初始化完成');
+            } else {
+                console.log('📱 系统已初始化，加载现有数据...');
+                // 加载自定义语法数据
+                loadCustomLessons();
+            }
+
+            updateStats();
+            updateCounts();
+        }
+
+        // 加载自定义语法数据
+        function loadCustomLessons() {
+            try {
+                const customLessons = localStorage.getItem('customLessons');
+                if (customLessons) {
+                    const customData = JSON.parse(customLessons);
+                    // 合并自定义数据到现有数据
+                    Object.assign(lessonsData, customData);
+                    console.log('📤 已加载自定义语法内容');
+                }
+            } catch (error) {
+                console.error('加载自定义语法失败:', error);
+            }
+
+            if (customLessons) {
+                try {
+                    const customData = JSON.parse(customLessons);
+                    // 合并自定义数据到现有数据
+                    Object.assign(lessonsData, customData);
+                    console.log('📤 已加载自定义语法内容');
+                } catch (error) {
+                    console.error('加载自定义语法失败:', error);
+                }
+            }
+
+            console.log('📝 自定义语法加载已禁用，系统保持清空状态');
+        }
+
+        // 重置所有学习数据（仅在需要时调用）
+        function resetAllProgress() {
+            localStorage.removeItem('cardProgress');
+            localStorage.removeItem('todayStats');
+            localStorage.removeItem('checkinData');
+            localStorage.removeItem('appSettings');
+            localStorage.removeItem('customLessons'); // 清除自定义课程数据
+        }
+
+        // 手动重置进度（在设置中提供给用户）
+        function manualResetProgress() {
+            if (confirm('确定要重置所有学习进度吗？此操作不可恢复！')) {
+                resetAllProgress();
+                localStorage.removeItem('appInitialized'); // 重置初始化标记
+                alert('学习进度已重置！页面将刷新。');
+                location.reload();
+            }
+        }
+
+        function updateStats() {
+            const stats = StorageManager.getTodayStats();
+            document.getElementById('today-new').textContent = stats.newCards || 0;
+            document.getElementById('today-review').textContent = stats.reviewCards || 0;
+
+            const dueCount = SpacedRepetition.getDueCards().length;
+            document.getElementById('due-count').textContent = dueCount;
+        }
+
+        function updateCounts() {
+            const newCards = SpacedRepetition.getNewCards().length;
+            const dueCards = SpacedRepetition.getDueCards().length;
+
+            document.getElementById('new-count').textContent = newCards;
+            document.getElementById('review-count').textContent = dueCards;
+        }
+
+        // 显示课程列表
+        function showLessonList(mode) {
+            studyMode = mode;
+            currentMode = 'lesson-list';
+
+            document.getElementById('main-menu').classList.remove('active');
+            document.getElementById('lesson-list').classList.add('active');
+
+            const title = mode === 'learn' ? '选择要学习的课程' : '浏览课程';
+            document.getElementById('lesson-list-title').textContent = title;
+
+            renderLessonList();
+        }
+
+        function renderLessonList() {
+            const container = document.getElementById('lessons-container');
+            container.innerHTML = '';
+
+            Object.entries(lessonsData).forEach(([lessonId, lesson]) => {
+                const lessonDiv = document.createElement('div');
+                lessonDiv.className = 'lesson-item';
+                lessonDiv.onclick = () => selectLesson(lessonId);
+
+                // 计算进度
+                const totalGrammar = lesson.grammar.length;
+                let learnedCount = 0;
+                lesson.grammar.forEach(grammar => {
+                    const progress = StorageManager.getCardProgress(grammar.id);
+                    if (progress.status !== 'new') learnedCount++;
+                });
+
+                const progressPercent = totalGrammar > 0 ? (learnedCount / totalGrammar) * 100 : 0;
+
+                lessonDiv.innerHTML = `
+                    <div>
+                        <div class="lesson-title">${lesson.title}</div>
+                        <div class="lesson-subtitle">${lesson.subtitle}</div>
+                    </div>
+                    <div class="lesson-progress">
+                        <div class="progress-text">${learnedCount}/${totalGrammar}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(lessonDiv);
+            });
+        }
+
+        function selectLesson(lessonId) {
+            currentLesson = lessonId;
+
+            if (studyMode === 'learn') {
+                startLessonStudy(lessonId);
+            } else {
+                showGrammarList(lessonId);
+            }
+        }
+
+        // 显示语法列表
+        function showGrammarList(lessonId) {
+            currentMode = 'grammar-list';
+
+            document.getElementById('lesson-list').classList.remove('active');
+            document.getElementById('grammar-list').classList.add('active');
+
+            const lesson = lessonsData[lessonId];
+            document.getElementById('grammar-list-title').textContent = `${lesson.title} - ${lesson.subtitle}`;
+
+            renderGrammarList(lesson.grammar);
+        }
+
+        function renderGrammarList(grammarList) {
+            const container = document.getElementById('grammar-container');
+            container.innerHTML = '';
+
+            grammarList.forEach(grammar => {
+                const progress = StorageManager.getCardProgress(grammar.id);
+
+                const grammarDiv = document.createElement('div');
+                grammarDiv.className = 'grammar-item';
+                grammarDiv.onclick = () => studySingleGrammar(grammar);
+
+                let statusText = '新卡片';
+                let statusClass = 'status-new';
+                let nextReviewText = '';
+
+                switch (progress.status) {
+                    case 'learning':
+                        statusText = '学习中';
+                        statusClass = 'status-learning';
+                        break;
+                    case 'review':
+                        statusText = '复习中';
+                        statusClass = 'status-review';
+                        break;
+                    case 'mastered':
+                        statusText = '已掌握';
+                        statusClass = 'status-mastered';
+                        break;
+                }
+
+                if (progress.nextReview) {
+                    const nextDate = new Date(progress.nextReview);
+                    const now = new Date();
+                    const diffDays = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays <= 0) {
+                        nextReviewText = '待复习';
+                    } else if (diffDays === 1) {
+                        nextReviewText = '明天复习';
+                    } else {
+                        nextReviewText = `${diffDays}天后复习`;
+                    }
+                }
+
+                grammarDiv.innerHTML = `
+                    <div class="grammar-pattern">${grammar.pattern}</div>
+                    <div class="grammar-meaning">${grammar.meaning}</div>
+                    <div class="grammar-status">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <span class="next-review">${nextReviewText}</span>
+                    </div>
+                `;
+
+                container.appendChild(grammarDiv);
+            });
+        }
+
+        // 开始学习
+        function startLessonStudy(lessonId) {
+            const lesson = lessonsData[lessonId];
+            const newCards = lesson.grammar.filter(grammar => {
+                const progress = StorageManager.getCardProgress(grammar.id);
+                return progress.status === 'new';
+            });
+
+            if (newCards.length === 0) {
+                alert('这一课的所有语法都已经学过了！');
+                return;
+            }
+
+            currentStudyCards = newCards.slice(0, 5); // 限制每次学习5个
+            startStudySession();
+        }
+
+        function startReview() {
+            const dueCards = SpacedRepetition.getDueCards();
+
+            if (dueCards.length === 0) {
+                alert('暂时没有需要复习的语法！');
+                return;
+            }
+
+            currentStudyCards = dueCards;
+            studyMode = 'review';
+            startStudySession();
+        }
+
+        function studySingleGrammar(grammar) {
+            currentStudyCards = [grammar];
+            studyMode = 'browse';
+            startStudySession();
+        }
+
+        function startStudySession() {
+            currentMode = 'study';
+            currentCardIndex = 0;
+            isCardFlipped = false;
+
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('study-screen').classList.add('active');
+
+            showCurrentCard();
+        }
+
+        function showCurrentCard() {
+            if (currentCardIndex >= currentStudyCards.length) {
+                finishStudySession();
+                return;
+            }
+
+            const card = currentStudyCards[currentCardIndex];
+            isCardFlipped = false;
+
+            // 更新进度 - 显示实际的卡片位置和总数（包括重复的卡片）
+            const progressText = `第 ${currentCardIndex + 1} 张 / 共 ${currentStudyCards.length} 张`;
+            document.getElementById('study-progress-text').textContent = progressText;
+
+            // 计算进度百分比 - 基于已完成的唯一卡片数量
+            const uniqueCards = new Set();
+            const completedUniqueCards = new Set();
+
+            // 统计所有唯一卡片
+            currentStudyCards.forEach(c => uniqueCards.add(c.id));
+
+            // 统计已经处理过的唯一卡片（不包括当前卡片）
+            for (let i = 0; i < currentCardIndex; i++) {
+                const processedCard = currentStudyCards[i];
+                const progress = StorageManager.getCardProgress(processedCard.id);
+                // 如果这张卡片已经毕业（不会再在本次会话中出现），则算作完成
+                if (progress.status === 'review' || progress.status === 'mastered' ||
+                    (progress.status === 'learning' && progress.learningStep >= 2)) {
+                    completedUniqueCards.add(processedCard.id);
+                }
+            }
+
+            const progressPercent = uniqueCards.size > 0 ?
+                (completedUniqueCards.size / uniqueCards.size) * 100 :
+                ((currentCardIndex + 1) / currentStudyCards.length) * 100;
+
+            document.getElementById('study-progress-bar').style.width = progressPercent + '%';
+
+            // 显示卡片正面
+            document.getElementById('study-pattern').textContent = card.pattern;
+            document.getElementById('card-front').classList.remove('hidden');
+            document.getElementById('card-back').classList.add('hidden');
+            document.getElementById('study-buttons').classList.add('hidden');
+
+            // 准备卡片背面内容
+            document.getElementById('study-meaning').textContent = card.meaning;
+            document.getElementById('study-connection').textContent = card.connection;
+            document.getElementById('study-notes').textContent = card.notes;
+
+            displayExamples(card.examples);
+
+            // 加载个人笔记
+            loadPersonalNote(card.id);
+
+            // 显示卡片状态信息（调试用，可选）
+            const progress = StorageManager.getCardProgress(card.id);
+            console.log(`卡片 ${card.pattern}: 状态=${progress.status}, 学习步骤=${progress.learningStep || 0}, 复习次数=${progress.reviewCount}`);
+        }
+
+        function flipCard() {
+            if (isCardFlipped) return;
+
+            isCardFlipped = true;
+            document.getElementById('card-front').classList.add('hidden');
+            document.getElementById('card-back').classList.remove('hidden');
+            document.getElementById('study-buttons').classList.remove('hidden');
+
+            // 更新按钮文本
+            updateButtonIntervals();
+        }
+
+        function updateButtonIntervals() {
+            const card = currentStudyCards[currentCardIndex];
+            const progress = StorageManager.getCardProgress(card.id);
+
+            // 根据当前状态和学习步骤计算间隔
+            let intervals = {};
+
+            if (progress.status === 'new' || progress.status === 'learning') {
+                // 学习阶段
+                intervals = {
+                    1: '1分钟',    // 重来：回到第一步
+                    2: '6分钟',    // 困难：回到第一步但稍长
+                    3: progress.learningStep === 0 ? '10分钟' : '1天',  // 良好：下一步或毕业
+                    4: '4天'       // 简单：直接毕业到长间隔
+                };
+            } else {
+                // 复习阶段
+                const currentInterval = progress.interval || 1;
+                const easeFactor = progress.easeFactor || 2.5;
+
+                intervals = {
+                    1: '1分钟',    // 重来：回到学习阶段
+                    2: '6分钟',    // 困难：回到学习阶段
+                    3: `${Math.round(currentInterval * easeFactor)}天`,  // 良好：正常间隔
+                    4: `${Math.round(currentInterval * easeFactor * 1.3)}天`  // 简单：更长间隔
+                };
+            }
+
+            document.querySelector('.btn-again small').textContent = intervals[1];
+            document.querySelector('.btn-hard small').textContent = intervals[2];
+            document.querySelector('.btn-good small').textContent = intervals[3];
+            document.querySelector('.btn-easy small').textContent = intervals[4];
+        }
+
+        function answerCard(quality) {
+            const card = currentStudyCards[currentCardIndex];
+            let progress = StorageManager.getCardProgress(card.id);
+
+            // 更新进度
+            const result = SpacedRepetition.calculateNextReview(progress, quality);
+            progress = result.progress;
+            const graduated = result.graduated;
+
+            StorageManager.saveCardProgress(card.id, progress);
+
+            // 更新统计
+            if (progress.reviewCount === 1) {
+                StorageManager.updateTodayStats('new');
+            } else {
+                StorageManager.updateTodayStats('review');
+            }
+
+            // Anki核心逻辑：如果没有毕业（回答错误或还在学习阶段），卡片需要重新加入队列
+            if (!graduated) {
+                // 将当前卡片重新加入到队列中，但不是立即重复
+                // 而是在几张卡片后重新出现
+                const reinsertPosition = Math.min(currentCardIndex + 3, currentStudyCards.length);
+                const cardToReinsert = { ...card };
+                cardToReinsert.progress = progress; // 更新进度信息
+
+                // 如果还没到队列末尾，插入到后面几张卡片的位置
+                if (reinsertPosition < currentStudyCards.length) {
+                    currentStudyCards.splice(reinsertPosition, 0, cardToReinsert);
+                } else {
+                    // 如果已经是最后几张卡片，直接添加到末尾
+                    currentStudyCards.push(cardToReinsert);
+                }
+            }
+
+            // 移动到下一张卡片
+            currentCardIndex++;
+            setTimeout(() => {
+                showCurrentCard();
+            }, 300);
+        }
+
+        function finishStudySession() {
+            const message = studyMode === 'review' ?
+                `恭喜！您已完成 ${currentStudyCards.length} 张卡片的复习。` :
+                `恭喜！您已学习 ${currentStudyCards.length} 张新卡片。`;
+
+            alert(message);
+            backToMenu();
+        }
+
+        // 显示例句
+        function displayExamples(examples) {
+            const container = document.getElementById('study-examples');
+            container.innerHTML = '<h4 style="margin-top: 0; color: #333;">例句：</h4>';
+
+            const currentCard = currentStudyCards[currentCardIndex];
+
+            examples.forEach((example, index) => {
+                const exampleDiv = document.createElement('div');
+                exampleDiv.className = 'example-item';
+                exampleDiv.onclick = () => speakJapanese(example.japanese);
+
+                const processedJapanese = processJapaneseText(example.japanese, example.furigana, currentCard.pattern);
+
+                exampleDiv.innerHTML = `
+                    <div class="example-japanese">${processedJapanese}</div>
+                    <div class="example-chinese">${example.chinese}</div>
+                    ${example.analysis ? `<div style="font-size: 12px; color: #007bff; margin-top: 8px; padding: 8px; background: #f0f8ff; border-radius: 5px; border-left: 3px solid #007bff;">${example.analysis}</div>` : ''}
+                `;
+
+                container.appendChild(exampleDiv);
+            });
+
+            // 如果有详细解释，添加到例句后面
+            if (currentCard.detailedExplanation) {
+                const explanationDiv = document.createElement('div');
+                explanationDiv.style.cssText = `
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-top: 15px;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #495057;
+                    white-space: pre-line;
+                `;
+                explanationDiv.innerHTML = `<h5 style="margin: 0 0 10px 0; color: #333;">📖 详细解释</h5>${currentCard.detailedExplanation}`;
+                container.appendChild(explanationDiv);
+            }
+        }
+
+        // 处理日语文本（假名标注和语法高亮）
+        function processJapaneseText(japanese, furigana, grammarPattern) {
+            const furiganaMatches = furigana.match(/([^(]+)\(([^)]+)\)/g) || [];
+            let processedText = japanese;
+
+            const furiganaMap = {};
+            furiganaMatches.forEach(match => {
+                const [, kanji, reading] = match.match(/([^(]+)\(([^)]+)\)/);
+                furiganaMap[kanji] = reading;
+            });
+
+            // 获取当前课程的所有语法点
+            const currentCard = currentStudyCards[currentCardIndex];
+            const currentLesson = getCurrentLessonFromCard(currentCard);
+            const allGrammarKeywords = getAllGrammarKeywordsFromLesson(currentLesson);
+
+            let result = processedText;
+
+            // 处理语法高亮 - 使用更智能的匹配
+            allGrammarKeywords.forEach(keyword => {
+                if (result.includes(keyword)) {
+                    // 使用更精确的正则表达式，避免重复替换
+                    const regex = new RegExp(`(?<!<[^>]*>)${escapeRegExp(keyword)}(?![^<]*>)`, 'g');
+                    result = result.replace(regex, `<span class="grammar-highlight">${keyword}</span>`);
+                }
+            });
+
+            // 处理假名标注
+            Object.keys(furiganaMap).forEach(kanji => {
+                const reading = furiganaMap[kanji];
+                if (result.includes(kanji) && !result.includes(`<span class="grammar-highlight">${kanji}</span>`)) {
+                    const regex = new RegExp(`(?<!<[^>]*>)${escapeRegExp(kanji)}(?![^<]*>)`, 'g');
+                    result = result.replace(regex,
+                        `<span class="furigana-text">${kanji}<span class="furigana">${reading}</span></span>`);
+                }
+            });
+
+            // 处理语法高亮中的假名标注
+            allGrammarKeywords.forEach(keyword => {
+                Object.keys(furiganaMap).forEach(kanji => {
+                    if (keyword.includes(kanji)) {
+                        const reading = furiganaMap[kanji];
+                        const highlightedKeyword = `<span class="grammar-highlight">${keyword}</span>`;
+                        if (result.includes(highlightedKeyword)) {
+                            const newKeyword = keyword.replace(kanji,
+                                `<span class="furigana-text">${kanji}<span class="furigana">${reading}</span></span>`);
+                            result = result.replace(highlightedKeyword,
+                                `<span class="grammar-highlight">${newKeyword}</span>`);
+                        }
+                    }
+                });
+            });
+
+            return result;
+        }
+
+        // 辅助函数：转义正则表达式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 获取当前卡片所属的课程
+        function getCurrentLessonFromCard(card) {
+            for (const [lessonId, lesson] of Object.entries(lessonsData)) {
+                if (lesson.grammar.some(g => g.id === card.id)) {
+                    return lesson;
+                }
+            }
+            return null;
+        }
+
+        // 获取课程中所有语法点的关键词
+        function getAllGrammarKeywordsFromLesson(lesson) {
+            if (!lesson) return [];
+
+            const allKeywords = new Set();
+
+            lesson.grammar.forEach(grammar => {
+                const keywords = extractGrammarKeywords(grammar.pattern);
+                keywords.forEach(keyword => allKeywords.add(keyword));
+            });
+
+            return Array.from(allKeywords).sort((a, b) => b.length - a.length); // 按长度排序，优先匹配长的
+        }
+
+        // 增强的语法关键词提取函数
+        function extractGrammarKeywords(pattern) {
+            const keywords = [];
+
+            // 移除语法模式中的符号，提取核心部分
+            const cleanPattern = pattern.replace(/[～〜]/g, '').replace(/[（）()]/g, '');
+
+            // 基础语法点提取
+            if (pattern.includes('際')) {
+                keywords.push('際は', '際に', '際');
+            }
+            if (pattern.includes('に際して')) {
+                keywords.push('に際して');
+            }
+            if (pattern.includes('にあたって')) {
+                keywords.push('にあたって');
+            }
+            if (pattern.includes('とたん')) {
+                keywords.push('とたんに', 'とたん');
+            }
+            if (pattern.includes('と思うと')) {
+                keywords.push('と思うと');
+            }
+            if (pattern.includes('と思ったら')) {
+                keywords.push('と思ったら');
+            }
+            if (pattern.includes('途端')) {
+                keywords.push('途端に', '途端');
+            }
+            if (pattern.includes('かのうちに')) {
+                keywords.push('かのうちに', 'かならないかのうちに');
+            }
+
+            // 常见语法模式
+            if (pattern.includes('うちに')) {
+                keywords.push('うちに');
+            }
+            if (pattern.includes('最中')) {
+                keywords.push('最中に', '最中だ', '最中');
+            }
+            if (pattern.includes('ばかりだ')) {
+                keywords.push('ばかりだ', 'ばかり');
+            }
+            if (pattern.includes('一方だ')) {
+                keywords.push('一方だ', '一方');
+            }
+            if (pattern.includes('ようとしている')) {
+                keywords.push('ようとしている', 'ようとして');
+            }
+            if (pattern.includes('つつある')) {
+                keywords.push('つつある');
+            }
+            if (pattern.includes('つつ')) {
+                keywords.push('つつ');
+            }
+
+            // 动态提取：直接从语法模式中提取可能的关键词
+            const dynamicKeywords = extractDynamicKeywords(cleanPattern);
+            keywords.push(...dynamicKeywords);
+
+            // 去重并按长度排序（长的优先匹配）
+            return [...new Set(keywords)].sort((a, b) => b.length - a.length);
+        }
+
+        // 动态提取语法关键词
+        function extractDynamicKeywords(pattern) {
+            const keywords = [];
+
+            // 提取平假名和片假名序列
+            const hiraganaMatches = pattern.match(/[ぁ-ゟ]+/g) || [];
+            const katakanaMatches = pattern.match(/[ァ-ヿ]+/g) || [];
+
+            keywords.push(...hiraganaMatches);
+            keywords.push(...katakanaMatches);
+
+            // 提取汉字序列
+            const kanjiMatches = pattern.match(/[一-龯]+/g) || [];
+            keywords.push(...kanjiMatches);
+
+            // 提取常见的语法结尾
+            const commonEndings = ['だ', 'である', 'です', 'ます', 'た', 'て', 'に', 'を', 'が', 'は', 'の'];
+            commonEndings.forEach(ending => {
+                if (pattern.includes(ending)) {
+                    keywords.push(ending);
+                }
+            });
+
+            return keywords.filter(k => k.length >= 2); // 只保留长度>=2的关键词
+        }
+
+        // 语音功能
+        function speakJapanese(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ja-JP';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 导航功能
+        function backToMenu() {
+            currentMode = 'menu';
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('main-menu').classList.add('active');
+
+            updateStats();
+            updateCounts();
+        }
+
+        function backToLessonList() {
+            document.getElementById('grammar-list').classList.remove('active');
+            document.getElementById('lesson-list').classList.add('active');
+            currentMode = 'lesson-list';
+        }
+
+        // 统计功能
+        function showStats() {
+            currentMode = 'stats';
+            document.getElementById('main-menu').classList.remove('active');
+            document.getElementById('stats-screen').classList.add('active');
+
+            renderStats();
+        }
+
+        // 上传功能
+        function showUpload() {
+            currentMode = 'upload';
+            document.getElementById('main-menu').classList.remove('active');
+            document.getElementById('upload-screen').classList.add('active');
+
+            initUploadArea();
+        }
+
+        let parsedData = null; // 存储解析后的数据
+
+        function initUploadArea() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const uploadResult = document.getElementById('upload-result');
+
+            // 重置状态
+            uploadResult.style.display = 'none';
+            parsedData = null;
+
+            // 点击上传区域
+            uploadArea.onclick = () => fileInput.click();
+
+            // 文件选择
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFileUpload(file);
+                }
+            };
+
+            // 拖拽功能
+            uploadArea.ondragover = (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            };
+
+            uploadArea.ondragleave = () => {
+                uploadArea.classList.remove('dragover');
+            };
+
+            uploadArea.ondrop = (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                        handleFileUpload(file);
+                    } else {
+                        showError('请选择 .txt 格式的文件');
+                    }
+                }
+            };
+        }
+
+        function handleFileUpload(file) {
+            if (!file.name.endsWith('.txt')) {
+                showError('请选择 .txt 格式的文件');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                try {
+                    parsedData = parseGrammarFile(content);
+                    displayParseResult(parsedData);
+                } catch (error) {
+                    showError('文件解析失败：' + error.message);
+                }
+            };
+
+            reader.onerror = () => {
+                showError('文件读取失败，请重试');
+            };
+
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseGrammarFile(content) {
+            try {
+                const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+
+                if (lines.length === 0) {
+                    throw new Error('文件内容为空');
+                }
+
+                const lessons = {};
+                let currentLesson = null;
+                let currentGrammar = null;
+                let parseState = 'looking_for_lesson';
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // 匹配课程标题：第1课、第01课、第一课等格式
+                    if (line.match(/^第[0-9一二三四五六七八九十]+课/) || line.match(/^第\d+课/)) {
+                        const lessonMatch = line.match(/第(\d+|[一二三四五六七八九十]+)课/);
+                        if (lessonMatch) {
+                            let lessonNumber;
+                            const numStr = lessonMatch[1];
+
+                            // 转换中文数字或阿拉伯数字
+                            if (isNaN(numStr)) {
+                                const chineseNumbers = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+                                lessonNumber = chineseNumbers[numStr] || parseInt(numStr);
+                            } else {
+                                lessonNumber = parseInt(numStr);
+                            }
+
+                            currentLesson = lessonNumber;
+
+                            if (!lessons[currentLesson]) {
+                                lessons[currentLesson] = {
+                                    title: (typeof lessonsData !== 'undefined' && lessonsData[currentLesson]) ? lessonsData[currentLesson].title : line,
+                                    subtitle: (typeof lessonsData !== 'undefined' && lessonsData[currentLesson]) ? lessonsData[currentLesson].subtitle : "自定义语法",
+                                    grammar: []
+                                };
+                            }
+                            parseState = 'looking_for_example';
+                            continue;
+                        }
+                    }
+
+                    if (!currentLesson) {
+                        continue;
+                    }
+
+                    if (parseState === 'looking_for_example') {
+                        // 跳过空行和非日语内容
+                        if (line.length === 0 || !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(line)) {
+                            continue;
+                        }
+
+                        const grammarId = Date.now() + Math.random() + lessons[currentLesson].grammar.length;
+                        currentGrammar = {
+                            id: grammarId,
+                            pattern: '',
+                            meaning: '',
+                            connection: '',
+                            notes: '',
+                            examples: [{
+                                japanese: line,
+                                furigana: line,
+                                chinese: ''
+                            }]
+                        };
+                        parseState = 'looking_for_translation';
+                        continue;
+                    }
+
+                    if (parseState === 'looking_for_translation') {
+                        if (currentGrammar && currentGrammar.examples.length > 0) {
+                            currentGrammar.examples[0].chinese = line;
+                        }
+                        parseState = 'looking_for_grammar';
+                        continue;
+                    }
+
+                    if (parseState === 'looking_for_grammar') {
+                        // 匹配语法解释：「语法」：解释 或 「语法」:解释
+                        if (line.includes('「') && line.includes('」')) {
+                            const grammarMatch = line.match(/「([^」]+)」[：:]\s*(.+)/);
+                            if (grammarMatch) {
+                                const grammarPattern = grammarMatch[1];
+                                const explanation = grammarMatch[2];
+
+                                currentGrammar.pattern = grammarPattern;
+                                currentGrammar.meaning = explanation;
+
+                                if (currentGrammar.examples[0]) {
+                                    currentGrammar.examples[0].furigana = highlightGrammarInSentence(
+                                        currentGrammar.examples[0].japanese,
+                                        grammarPattern
+                                    );
+                                }
+                            }
+
+                            lessons[currentLesson].grammar.push(currentGrammar);
+                            currentGrammar = null;
+                            parseState = 'looking_for_example';
+                        } else {
+                            // 继续收集语法说明
+                            if (currentGrammar) {
+                                currentGrammar.notes += (currentGrammar.notes ? ' ' : '') + line;
+                            }
+                        }
+                        continue;
+                    }
+                }
+
+                // 处理最后一个语法项
+                if (currentGrammar && currentLesson) {
+                    lessons[currentLesson].grammar.push(currentGrammar);
+                }
+
+                if (Object.keys(lessons).length === 0) {
+                    throw new Error('未找到有效的语法内容，请检查文件格式。\n\n期望格式：\n第1课\n日语例句\n中文翻译\n「语法」：解释');
+                }
+
+                return lessons;
+
+            } catch (error) {
+                throw new Error('解析失败: ' + error.message);
+            }
+        }
+
+        // 辅助函数：在句子中高亮语法部分
+        function highlightGrammarInSentence(sentence, grammarPattern) {
+            // 移除语法模式中的特殊符号，提取核心部分
+            let corePattern = grammarPattern.replace(/[～〜]/g, '').replace(/[（）()]/g, '');
+
+            // 处理一些常见的语法模式
+            const patterns = [
+                corePattern,
+                corePattern.replace(/に$/, ''),
+                corePattern.replace(/だ$/, ''),
+                corePattern.replace(/である$/, ''),
+            ];
+
+            let result = sentence;
+
+            // 尝试匹配和高亮
+            for (const pattern of patterns) {
+                if (pattern && sentence.includes(pattern)) {
+                    // 简单的高亮处理，实际使用时会在显示时处理
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        function displayParseResult(data) {
+            const resultDiv = document.getElementById('upload-result');
+            const parseResultDiv = document.getElementById('parse-result');
+
+            let html = '';
+            let totalGrammar = 0;
+
+            Object.entries(data).forEach(([lessonId, lesson]) => {
+                totalGrammar += lesson.grammar.length;
+
+                html += `
+                    <div class="parsed-lesson">
+                        <h4>${lesson.title} (${lesson.grammar.length} 个语法)</h4>
+                `;
+
+                lesson.grammar.forEach((grammar, index) => {
+                    html += `
+                        <div class="parsed-grammar">
+                            <div class="parsed-pattern">${grammar.pattern}</div>
+                            <div class="parsed-meaning">${grammar.meaning}</div>
+                            ${grammar.connection ? `<div class="parsed-meaning">接续：${grammar.connection}</div>` : ''}
+                            ${grammar.notes ? `<div class="parsed-meaning">注意：${grammar.notes}</div>` : ''}
+                            <div class="parsed-examples">
+                                ${grammar.examples.length} 个例句
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            });
+
+            parseResultDiv.innerHTML = `
+                <div class="success-message">
+                    ✅ 解析成功！共找到 ${Object.keys(data).length} 个课程，${totalGrammar} 个语法条目
+                </div>
+                ${html}
+            `;
+
+            resultDiv.style.display = 'block';
+        }
+
+        function confirmUpload() {
+            if (!parsedData) {
+                showError('没有可添加的数据');
+                return;
+            }
+
+            try {
+                // 合并到现有数据
+                Object.entries(parsedData).forEach(([lessonId, lesson]) => {
+                    if (lessonsData[lessonId]) {
+                        // 如果课程已存在，合并语法条目
+                        lessonsData[lessonId].grammar = lessonsData[lessonId].grammar.concat(lesson.grammar);
+                    } else {
+                        // 如果课程不存在，直接添加
+                        lessonsData[lessonId] = lesson;
+                    }
+                });
+
+                // 保存到本地存储
+                localStorage.setItem('customLessons', JSON.stringify(lessonsData));
+
+                showSuccess('语法内容已成功添加到系统中！');
+
+                // 更新统计
+                updateStats();
+                updateCounts();
+
+                // 3秒后返回主菜单
+                setTimeout(() => {
+                    backToMenu();
+                }, 3000);
+
+            } catch (error) {
+                showError('添加失败：' + error.message);
+            }
+        }
+
+        function cancelUpload() {
+            parsedData = null;
+            document.getElementById('upload-result').style.display = 'none';
+            document.getElementById('file-input').value = '';
+        }
+
+        function showError(message) {
+            const parseResultDiv = document.getElementById('parse-result');
+            parseResultDiv.innerHTML = `
+                <div class="error-message">
+                    ❌ ${message}
+                </div>
+            `;
+            document.getElementById('upload-result').style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const parseResultDiv = document.getElementById('parse-result');
+            parseResultDiv.innerHTML = `
+                <div class="success-message">
+                    ✅ ${message}
+                </div>
+            `;
+        }
+
+        function renderStats() {
+            const container = document.getElementById('stats-content');
+
+            // 计算统计数据
+            let totalCards = 0;
+            let newCards = 0;
+            let learningCards = 0;
+            let reviewCards = 0;
+            let masteredCards = 0;
+
+            Object.values(lessonsData).forEach(lesson => {
+                lesson.grammar.forEach(grammar => {
+                    totalCards++;
+                    const progress = StorageManager.getCardProgress(grammar.id);
+                    switch (progress.status) {
+                        case 'new': newCards++; break;
+                        case 'learning': learningCards++; break;
+                        case 'review': reviewCards++; break;
+                        case 'mastered': masteredCards++; break;
+                    }
+                });
+            });
+
+            const todayStats = StorageManager.getTodayStats();
+
+            container.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">今日学习</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>新学语法：</span>
+                        <span style="color: #007bff; font-weight: bold;">${todayStats.newCards || 0} 个</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>复习语法：</span>
+                        <span style="color: #28a745; font-weight: bold;">${todayStats.reviewCards || 0} 个</span>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">总体进度</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>总语法数：</span>
+                        <span style="font-weight: bold;">${totalCards} 个</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>新语法：</span>
+                        <span style="color: #6c757d; font-weight: bold;">${newCards} 个</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>学习中：</span>
+                        <span style="color: #ffc107; font-weight: bold;">${learningCards} 个</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>复习中：</span>
+                        <span style="color: #28a745; font-weight: bold;">${reviewCards} 个</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>已掌握：</span>
+                        <span style="color: #6f42c1; font-weight: bold;">${masteredCards} 个</span>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">学习进度</h3>
+                    <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+                        <div style="height: 100%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); width: ${totalCards > 0 ? ((totalCards - newCards) / totalCards) * 100 : 0}%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div style="text-align: center; color: #666; font-size: 14px;">
+                        已学习 ${totalCards - newCards} / ${totalCards} 个语法 (${totalCards > 0 ? Math.round(((totalCards - newCards) / totalCards) * 100) : 0}%)
+                    </div>
+                </div>
+            `;
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        // ===== 个人笔记功能 =====
+
+        // 加载个人笔记
+        function loadPersonalNote(cardId) {
+            const notes = getPersonalNotes();
+            const personalNote = notes[cardId] || '';
+
+            const notesContent = document.getElementById('notes-content');
+            const notesTextarea = document.getElementById('notes-textarea');
+
+            if (personalNote.trim()) {
+                notesContent.textContent = personalNote;
+                notesContent.classList.add('has-content');
+            } else {
+                notesContent.textContent = '暂无笔记，点击编辑添加...';
+                notesContent.classList.remove('has-content');
+            }
+
+            notesTextarea.value = personalNote;
+
+            // 重置编辑状态
+            document.getElementById('personal-notes-display').classList.remove('hidden');
+            document.getElementById('personal-notes-edit').classList.add('hidden');
+            document.getElementById('notes-toggle').textContent = '编辑';
+        }
+
+        // 获取所有个人笔记
+        function getPersonalNotes() {
+            const notes = localStorage.getItem('personalNotes');
+            return notes ? JSON.parse(notes) : {};
+        }
+
+        // 保存个人笔记
+        function savePersonalNotes(notes) {
+            localStorage.setItem('personalNotes', JSON.stringify(notes));
+        }
+
+        // 切换笔记编辑模式
+        function toggleNotesEdit() {
+            const displayDiv = document.getElementById('personal-notes-display');
+            const editDiv = document.getElementById('personal-notes-edit');
+            const toggleBtn = document.getElementById('notes-toggle');
+
+            if (editDiv.classList.contains('hidden')) {
+                // 进入编辑模式
+                displayDiv.classList.add('hidden');
+                editDiv.classList.remove('hidden');
+                toggleBtn.textContent = '取消';
+
+                // 聚焦到文本框
+                document.getElementById('notes-textarea').focus();
+            } else {
+                // 退出编辑模式
+                cancelNotesEdit();
+            }
+        }
+
+        // 保存个人笔记
+        function savePersonalNote() {
+            const card = currentStudyCards[currentCardIndex];
+            const noteText = document.getElementById('notes-textarea').value.trim();
+
+            const notes = getPersonalNotes();
+            if (noteText) {
+                notes[card.id] = noteText;
+            } else {
+                delete notes[card.id];
+            }
+
+            savePersonalNotes(notes);
+
+            // 更新显示
+            loadPersonalNote(card.id);
+
+            // 显示保存成功提示
+            showNoteSaveSuccess();
+        }
+
+        // 取消编辑笔记
+        function cancelNotesEdit() {
+            const card = currentStudyCards[currentCardIndex];
+
+            // 重新加载原始笔记内容
+            loadPersonalNote(card.id);
+        }
+
+        // 显示笔记保存成功提示
+        function showNoteSaveSuccess() {
+            const toggleBtn = document.getElementById('notes-toggle');
+            const originalText = toggleBtn.textContent;
+
+            toggleBtn.textContent = '✅ 已保存';
+            toggleBtn.style.background = '#28a745';
+
+            setTimeout(() => {
+                toggleBtn.textContent = originalText;
+                toggleBtn.style.background = '#007bff';
+            }, 1500);
+        }
+
+        // 重置所有数据
+        function resetAllData() {
+            if (confirm('⚠️ 确定要重置所有数据吗？\n\n这将清空：\n• 所有学习进度\n• 上传的语法内容\n• 学习统计\n\n此操作无法恢复！')) {
+                if (confirm('🚨 最后确认：真的要删除所有数据吗？')) {
+                    localStorage.clear();
+                    localStorage.setItem('appInitialized', 'true');
+
+                    // 重新加载页面
+                    location.reload();
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
