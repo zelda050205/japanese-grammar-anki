@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语语法记忆系统 - Anki风格</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>日语语法记忆系统</h1>
+            <div class="stats">
+                <span>今日新学: <span id="today-new">0</span></span>
+                <span>今日复习: <span id="today-review">0</span></span>
+                <span>待复习: <span id="due-count">0</span></span>
+            </div>
+        </div>
+
+        <!-- 主菜单 -->
+        <div id="main-menu" class="screen active">
+            <button class="menu-btn btn-learn" onclick="showLessonList('learn')">
+                <span>📚 学习新语法</span>
+                <span class="btn-count" id="new-count">5</span>
+            </button>
+            
+            <button class="menu-btn btn-review" onclick="startReview()">
+                <span>🔄 复习语法</span>
+                <span class="btn-count" id="review-count">0</span>
+            </button>
+            
+            <button class="menu-btn btn-browse" onclick="showLessonList('browse')">
+                <span>📖 浏览语法</span>
+                <span class="btn-count">∞</span>
+            </button>
+            
+            <button class="menu-btn btn-stats" onclick="showStats()">
+                <span>📊 学习统计</span>
+                <span class="btn-count">📈</span>
+            </button>
+            
+            <button class="menu-btn btn-upload" onclick="showUpload()">
+                <span>📤 上传语法</span>
+                <span class="btn-count">+</span>
+            </button>
+        </div>
+
+        <!-- 课程列表 -->
+        <div id="lesson-list" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2 id="lesson-list-title">选择课程</h2>
+            <div class="lesson-list" id="lessons-container">
+                <!-- 课程列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 语法列表 -->
+        <div id="grammar-list" class="screen">
+            <button class="back-btn" onclick="backToLessonList()">← 返回课程列表</button>
+            <h2 id="grammar-list-title">第一课语法</h2>
+            <div class="grammar-list" id="grammar-container">
+                <!-- 语法列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 学习界面 -->
+        <div id="study-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            
+            <div class="progress-info">
+                <div id="study-progress-text">第 1 张 / 共 5 张</div>
+                <div class="session-progress">
+                    <div class="session-progress-fill" id="study-progress-bar"></div>
+                </div>
+            </div>
+            
+            <div class="study-card" onclick="flipCard()">
+                <div id="card-front" class="card-front">
+                    <div class="pattern" id="study-pattern">～際（に）</div>
+                    <div class="flip-hint">点击翻转查看详情</div>
+                </div>
+                
+                <div id="card-back" class="card-back hidden">
+                    <div class="meaning" id="study-meaning">在～时候、在～时机</div>
+                    <div class="connection" id="study-connection">动词辞书形/た形 + 際（に）</div>
+                    <div class="notes" id="study-notes">硬い言い方，正式场合使用</div>
+                    <div class="examples" id="study-examples">
+                        <!-- 例句将在这里动态显示 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons hidden" id="study-buttons">
+                <button class="action-btn btn-again" onclick="answerCard(1)">重来<br><small>1分钟</small></button>
+                <button class="action-btn btn-hard" onclick="answerCard(2)">困难<br><small>6分钟</small></button>
+                <button class="action-btn btn-good" onclick="answerCard(3)">良好<br><small>1天</small></button>
+                <button class="action-btn btn-easy" onclick="answerCard(4)">简单<br><small>4天</small></button>
+            </div>
+        </div>
+
+        <!-- 统计界面 -->
+        <div id="stats-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2>学习统计</h2>
+            <div id="stats-content">
+                <!-- 统计内容将在这里显示 -->
+            </div>
+        </div>
+
+        <!-- 上传界面 -->
+        <div id="upload-screen" class="screen">
+            <button class="back-btn" onclick="backToMenu()">← 返回主菜单</button>
+            <h2>上传自定义语法</h2>
+            
+            <div class="upload-container">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">
+                        <p>点击选择文件或拖拽文件到此处</p>
+                        <p class="upload-hint">支持 .txt 格式文件</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".txt" style="display: none;">
+                </div>
+                
+                <div class="format-guide">
+                    <h3>📋 文件格式说明</h3>
+                    <div class="format-example">
+                        <p><strong>支持多课时格式：</strong></p>
+                        <pre>第2课
+忘れないうちに、カレンダーにメモしておこう。
+趁着没忘，先记在日历上吧。
+「〜うちに」：A:"趁着～赶紧"+意志；B:后+不知不觉、自然而然的变化；不+意志
+
+第3课
+彼女は毎日遅刻ばかりしている。
+她每天都在迟到。
+「〜ばかりだ」：表示不断重复某种不好的行为</pre>
+                    </div>
+                    <div class="format-notes">
+                        <p><strong>格式说明：</strong></p>
+                        <ul>
+                            <li>✅ <strong>支持多课时</strong>：一个文档可以包含多个课程</li>
+                            <li>📚 课程标题：第X课（如：第2课、第3课、第10课）</li>
+                            <li>📝 每3行为一组：日语例句 → 中文翻译 → 语法解释</li>
+                            <li>🔤 语法解释格式：「语法点」：说明内容</li>
+                            <li>🔄 课程之间可用空行分隔（可选）</li>
+                            <li>💾 文件编码请使用 UTF-8</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="upload-result" id="upload-result" style="display: none;">
+                    <h3>📊 解析结果</h3>
+                    <div id="parse-result"></div>
+                    <div class="upload-actions">
+                        <button class="action-btn btn-confirm" onclick="confirmUpload()">确认添加</button>
+                        <button class="action-btn btn-cancel" onclick="cancelUpload()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/spaced-repetition.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
